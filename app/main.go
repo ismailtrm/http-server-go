@@ -23,10 +23,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	clientConn, err := conn.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+	for {
+		clientConn, err := conn.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+		fmt.Println("connection accepted ")
+		clientConn.Write(OK)
 	}
-	clientConn.Write(OK)
 }
