@@ -15,16 +15,18 @@ func main() {
 	fmt.Println("Logs from your program will appear here!")
 
 	// TODO: Uncomment the code below to pass the first stage
+	OK := []byte("HTTP/1.1 200 OK\r\n\r\n")
 
-	l, err := net.Listen("tcp", "0.0.0.0:4221")
+	conn, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
 		fmt.Println("Failed to bind to port 4221")
 		os.Exit(1)
 	}
 
-	_, err = l.Accept()
+	clientConn, err := conn.Accept()
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
+	clientConn.Write(OK)
 }
