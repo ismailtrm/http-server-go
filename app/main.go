@@ -12,7 +12,8 @@ var _ = net.Listen
 var _ = os.Exit
 
 type Request struct {
-	Data string
+	Buffer []byte
+	Data   string
 }
 
 type HTTP struct {
@@ -20,6 +21,11 @@ type HTTP struct {
 	request_target string
 	protocol       string
 }
+
+const (
+	OK        = "HTTP/1.1 200 OK\r\n\r\n"
+	NOT_FOUND = "HTTP/1.1 404 Not Found\r\n\r\n"
+)
 
 func (r Request) Parse() *HTTP {
 	lines := strings.Split(r.Data, " ")
@@ -30,14 +36,40 @@ func (r Request) Parse() *HTTP {
 	return http_req
 }
 
-func main() {
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
-	fmt.Println("Logs from your program will appear here!")
+func handler(conn net.Listener) {
+	request := new(Request)
+	request.Buffer = make([]byte, 1024)
 
-	// TODO: Uncomment the code below to pass the first stage
-	reqBuf := make([]byte, 1024)
-	OK := []byte("HTTP/1.1 200 OK\r\n\r\n")
-	NOT_FOUND := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
+	clientConn, err := conn.Accept()
+	if err != nil {
+		fmt.Println("Error accepting connection: ", err.Error())
+		os.Exit(1)
+	}
+
+	defer clientConn.Close()
+
+	req, err := clientConn.Read(request.Buffer)
+
+	if err == nil {
+		fmt.Println("Request catched")
+
+		request.Data = string(request.Buffer[:req])
+
+		http_req := request.Parse()
+
+		if http_req.method == "GET" && http_req.request_target == "/" {
+			fmt.Println("OK")
+			clientConn.Write([]byte(OK))
+			fmt.Println("Received request:", request.Data)
+		} else {
+			fmt.Println("NOT_FOUND")
+			clientConn.Write([]byte(NOT_FOUND))
+			fmt.Println("Received request:", request.Data)
+		}
+	}
+}
+func main() {
+	fmt.Println("Logs will appear here!")
 
 	conn, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
@@ -46,29 +78,6 @@ func main() {
 	}
 
 	for {
-		clientConn, err := conn.Accept()
-		if err != nil {
-			fmt.Println("Error accepting connection: ", err.Error())
-			os.Exit(1)
-		}
-		req, err := clientConn.Read(reqBuf)
-
-		if err == nil {
-			fmt.Println("request catched")
-
-			reqString := new(Request)
-			reqString.Data = string(reqBuf[:req])
-			fmt.Println("Received request:", reqString.Data)
-
-			http_req := reqString.Parse()
-			if http_req.request_target == "/" {
-				fmt.Println(string(OK))
-				clientConn.Write(OK)
-			} else {
-				fmt.Println(string(OK))
-				clientConn.Write(NOT_FOUND)
-			}
-		}
-		clientConn.Close()
+		handler(conn)
 	}
 }
