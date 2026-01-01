@@ -1,3 +1,3 @@
-module github.com/codecrafters-io/http-server-starter-go
+module github.com/ismailtrm/http-server-go
 
 go 1.25.0

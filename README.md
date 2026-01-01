@@ -1,37 +1,103 @@
-[![progress-banner](https://backend.codecrafters.io/progress/http-server/92d4c6f6-6688-4517-8016-1ccef85f25b4)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# HTTP Server in Go
 
-This is a starting point for Go solutions to the
-["Build Your Own HTTP server" Challenge](https://app.codecrafters.io/courses/http-server/overview).
+A simple HTTP/1.1 server implementation written in Go from scratch.
 
-[HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) is the
-protocol that powers the web. In this challenge, you'll build a HTTP/1.1 server
-that is capable of serving multiple clients.
+## Features
 
-Along the way you'll learn about TCP servers,
-[HTTP request syntax](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html),
-and more.
+- ✅ TCP connection handling
+- ✅ HTTP/1.1 request parsing
+- ✅ Custom string manipulation (no external dependencies)
+- ✅ GET and POST method support
+- ✅ Basic routing
+- ✅ Proper connection lifecycle management with defer
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+## Project Structure
 
-# Passing the first stage
-
-The entry point for your HTTP server implementation is in `app/main.go`. Study
-and uncomment the relevant code, and push your changes to pass the first stage:
-
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
+```
+.
+├── app/
+│   └── main.go       # Main HTTP server implementation
+├── go.mod            # Go module definition
+└── README.md         # This file
 ```
 
-Time to move on to the next stage!
+## Getting Started
 
-# Stage 2 & beyond
+### Prerequisites
 
-Note: This section is for stages 2 and beyond.
+- Go 1.25 or higher
 
-1. Ensure you have `go (1.25)` installed locally
-1. Run `./your_program.sh` to run your program, which is implemented in
-   `app/main.go`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+### Running the Server
+
+```bash
+go run app/main.go
+```
+
+The server will start listening on `0.0.0.0:4221`
+
+### Testing
+
+```bash
+# Test root endpoint
+curl http://localhost:4221/
+
+# Test echo endpoint
+curl http://localhost:4221/echo/hello
+
+# Test with verbose output
+curl -v http://localhost:4221/
+```
+
+## Implementation Details
+
+### Custom String Type
+
+The project implements a custom `str` type with a `Split()` method to demonstrate Go's type system and method receivers:
+
+```go
+type str string
+
+func (s str) Split(sep byte) []string {
+    // Custom split implementation
+}
+```
+
+### Request Parsing
+
+HTTP requests are parsed into structured types:
+
+```go
+type HTTP struct {
+    method         string
+    request_target string
+    protocol       string
+}
+```
+
+### Routing
+
+The server uses a switch statement for clean method-based routing:
+
+- `GET /` - Returns 200 OK
+- `POST /` - Returns 200 OK
+- Other methods - Returns 405 Method Not Allowed
+- Unknown paths - Returns 404 Not Found
+
+## Learning Objectives
+
+This project demonstrates:
+
+1. TCP socket programming in Go
+2. HTTP protocol fundamentals
+3. Custom type creation and method receivers
+4. Proper resource management with `defer`
+5. String manipulation without external libraries
+6. Error handling patterns in Go
+
+## License
+
+MIT
+
+## Author
+
+[ismailtrm](https://github.com/ismailtrm)

@@ -6,10 +6,6 @@ import (
 	"os"
 )
 
-// Ensures gofmt doesn't remove the "net" and "os" imports above (feel free to remove this!)
-var _ = net.Listen
-var _ = os.Exit
-
 type str string
 
 type Request struct {
@@ -29,6 +25,7 @@ const (
 	METHOD_NOT_ALLOWED = "HTTP/1.1 405 Method Not Allowed\r\n\r\n"
 )
 
+// Split splits a string by a single byte separator
 func (s str) Split(sep byte) []string {
 	var result []string
 	start := 0
@@ -44,6 +41,7 @@ func (s str) Split(sep byte) []string {
 	return result
 }
 
+// Parse parses the HTTP request into structured format
 func (r Request) Parse() *HTTP {
 	lines := r.Data.Split(' ')
 	http_req := new(HTTP)
@@ -53,13 +51,14 @@ func (r Request) Parse() *HTTP {
 	return http_req
 }
 
+// handler handles incoming client connections
 func handler(conn net.Listener) {
 	request := new(Request)
 	request.Buffer = make([]byte, 1024)
 
 	clientConn, err := conn.Accept()
 	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
+		fmt.Println("Error accepting connection:", err.Error())
 		os.Exit(1)
 	}
 
@@ -68,7 +67,7 @@ func handler(conn net.Listener) {
 	req, err := clientConn.Read(request.Buffer)
 
 	if err == nil {
-		fmt.Println("Request catched")
+		fmt.Println("Request received")
 
 		request.Data = str(request.Buffer[:req])
 
@@ -77,35 +76,37 @@ func handler(conn net.Listener) {
 		switch http_req.method {
 		case "GET":
 			if http_req.request_target == "/" {
-				fmt.Println("OK")
+				fmt.Println("200 OK")
 				clientConn.Write([]byte(OK))
 			} else {
-				fmt.Println("NOT_FOUND")
+				fmt.Println("404 Not Found")
 				clientConn.Write([]byte(NOT_FOUND))
 			}
 		case "POST":
 			if http_req.request_target == "/" {
-				fmt.Println("OK")
+				fmt.Println("200 OK")
 				clientConn.Write([]byte(OK))
 			} else {
-				fmt.Println("NOT_FOUND")
+				fmt.Println("404 Not Found")
 				clientConn.Write([]byte(NOT_FOUND))
 			}
 		default:
-			fmt.Println("METHOD_NOT_ALLOWED")
+			fmt.Println("405 Method Not Allowed")
 			clientConn.Write([]byte(METHOD_NOT_ALLOWED))
 		}
 	}
 }
 
 func main() {
-	fmt.Println("Logs will appear here!")
+	fmt.Println("HTTP Server starting on 0.0.0.0:4221...")
 
 	conn, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
 		fmt.Println("Failed to bind to port 4221")
 		os.Exit(1)
 	}
+
+	fmt.Println("Server is listening for connections...")
 
 	for {
 		handler(conn)
