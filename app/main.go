@@ -47,29 +47,17 @@ func (s str) Split(sep string) []string {
 func (r Request) Parse() *HTTP {
 	http_req := new(HTTP)
 
-	lines := r.Data.Split("\r\n")
-	firstLine := lines[0]
+	parts := r.Data.Split("\r\n\r\n")
+	header := str(parts[0]).Split("\r\n")
+	firstLine := header[0]
 
-	parts := str(firstLine).Split(" ")
-	http_req.method = parts[0]
-	http_req.request_target = parts[1]
-	http_req.protocol = parts[2]
+	lines := str(firstLine).Split(" ")
+	http_req.method = lines[0]
+	http_req.request_target = lines[1]
+	http_req.protocol = lines[2]
 
-	bodyStartIndex := -1
-	for i := 0; i < len(lines); i++ {
-		if lines[i] == "" {
-			bodyStartIndex = i + 1
-			break
-		}
-	}
-
-	if bodyStartIndex != -1 && bodyStartIndex < len(lines) {
-		for i := bodyStartIndex; i < len(lines); i++ {
-			if i > bodyStartIndex {
-				http_req.body += "\r\n"
-			}
-			http_req.body += lines[i]
-		}
+	if len(parts) > 1 {
+		http_req.body = parts[1]
 	} else {
 		http_req.body = ""
 	}
