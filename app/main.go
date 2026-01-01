@@ -45,24 +45,30 @@ func (s str) Split(sep string) []string {
 
 // Parse parses the HTTP request into structured format
 func (r Request) Parse() *HTTP {
-	http_req := new(HTTP)
+	httpReq := new(HTTP)
 
-	parts := r.Data.Split("\r\n\r\n")
-	header := str(parts[0]).Split("\r\n")
-	firstLine := header[0]
+	// Split into headers and body
+	sections := r.Data.Split("\r\n\r\n")
+	headerSection := sections[0]
 
-	lines := str(firstLine).Split(" ")
-	http_req.method = lines[0]
-	http_req.request_target = lines[1]
-	http_req.protocol = lines[2]
+	// Parse header lines
+	headerLines := str(headerSection).Split("\r\n")
+	requestLine := headerLines[0] // "GET / HTTP/1.1"
 
-	if len(parts) > 1 {
-		http_req.body = parts[1]
+	// Parse request line components
+	requestParts := str(requestLine).Split(" ")
+	httpReq.method = requestParts[0]
+	httpReq.request_target = requestParts[1]
+	httpReq.protocol = requestParts[2]
+
+	// Extract body if present
+	if len(sections) > 1 {
+		httpReq.body = sections[1]
 	} else {
-		http_req.body = ""
+		httpReq.body = ""
 	}
 
-	return http_req
+	return httpReq
 }
 
 // handler handles incoming client connections
@@ -85,11 +91,11 @@ func handler(conn net.Listener) {
 
 		request.Data = str(request.Buffer[:req])
 
-		http_req := request.Parse()
+		httpReq := request.Parse()
 
-		switch http_req.method {
+		switch httpReq.method {
 		case "GET":
-			if http_req.request_target == "/" {
+			if httpReq.request_target == "/" {
 				fmt.Println("200 OK")
 				clientConn.Write([]byte(OK))
 			} else {
@@ -97,7 +103,7 @@ func handler(conn net.Listener) {
 				clientConn.Write([]byte(NOT_FOUND))
 			}
 		case "POST":
-			if http_req.request_target == "/" {
+			if httpReq.request_target == "/" {
 				fmt.Println("200 OK")
 				fmt.Println(str(request.Buffer))
 				clientConn.Write([]byte(OK))
