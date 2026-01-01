@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strings"
 )
 
 // Ensures gofmt doesn't remove the "net" and "os" imports above (feel free to remove this!)
 var _ = net.Listen
 var _ = os.Exit
 
+type str string
+
 type Request struct {
 	Buffer []byte
-	Data   string
+	Data   str
 }
 
 type HTTP struct {
@@ -23,12 +24,28 @@ type HTTP struct {
 }
 
 const (
-	OK        = "HTTP/1.1 200 OK\r\n\r\n"
-	NOT_FOUND = "HTTP/1.1 404 Not Found\r\n\r\n"
+	OK                 = "HTTP/1.1 200 OK\r\n\r\n"
+	NOT_FOUND          = "HTTP/1.1 404 Not Found\r\n\r\n"
+	METHOD_NOT_ALLOWED = "HTTP/1.1 405 Method Not Allowed\r\n\r\n"
 )
 
+func (s str) Split(sep byte) []string {
+	var result []string
+	start := 0
+
+	for i := 0; i < len(s); i++ {
+		if s[i] == sep {
+			result = append(result, string(s[start:i]))
+			start = i + 1
+		}
+	}
+
+	result = append(result, string(s[start:]))
+	return result
+}
+
 func (r Request) Parse() *HTTP {
-	lines := strings.Split(r.Data, " ")
+	lines := r.Data.Split(' ')
 	http_req := new(HTTP)
 	http_req.method = lines[0]
 	http_req.request_target = lines[1]
@@ -53,21 +70,34 @@ func handler(conn net.Listener) {
 	if err == nil {
 		fmt.Println("Request catched")
 
-		request.Data = string(request.Buffer[:req])
+		request.Data = str(request.Buffer[:req])
 
 		http_req := request.Parse()
 
-		if http_req.method == "GET" && http_req.request_target == "/" {
-			fmt.Println("OK")
-			clientConn.Write([]byte(OK))
-			fmt.Println("Received request:", request.Data)
-		} else {
-			fmt.Println("NOT_FOUND")
-			clientConn.Write([]byte(NOT_FOUND))
-			fmt.Println("Received request:", request.Data)
+		switch http_req.method {
+		case "GET":
+			if http_req.request_target == "/" {
+				fmt.Println("OK")
+				clientConn.Write([]byte(OK))
+			} else {
+				fmt.Println("NOT_FOUND")
+				clientConn.Write([]byte(NOT_FOUND))
+			}
+		case "POST":
+			if http_req.request_target == "/" {
+				fmt.Println("OK")
+				clientConn.Write([]byte(OK))
+			} else {
+				fmt.Println("NOT_FOUND")
+				clientConn.Write([]byte(NOT_FOUND))
+			}
+		default:
+			fmt.Println("METHOD_NOT_ALLOWED")
+			clientConn.Write([]byte(METHOD_NOT_ALLOWED))
 		}
 	}
 }
+
 func main() {
 	fmt.Println("Logs will appear here!")
 
