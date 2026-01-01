@@ -17,6 +17,7 @@ type HTTP struct {
 	method         string
 	request_target string
 	protocol       string
+	body           string
 }
 
 const (
@@ -25,15 +26,16 @@ const (
 	METHOD_NOT_ALLOWED = "HTTP/1.1 405 Method Not Allowed\r\n\r\n"
 )
 
-// Split splits a string by a single byte separator
-func (s str) Split(sep byte) []string {
+// Split splits a string by a string separator
+func (s str) Split(sep string) []string {
 	var result []string
 	start := 0
 
 	for i := 0; i < len(s); i++ {
-		if s[i] == sep {
+		if i+len(sep) <= len(s) && string(s[i:i+len(sep)]) == sep {
 			result = append(result, string(s[start:i]))
-			start = i + 1
+			start = i + len(sep)
+			i += len(sep) - 1 // Skip separator
 		}
 	}
 
@@ -43,11 +45,35 @@ func (s str) Split(sep byte) []string {
 
 // Parse parses the HTTP request into structured format
 func (r Request) Parse() *HTTP {
-	lines := r.Data.Split(' ')
 	http_req := new(HTTP)
-	http_req.method = lines[0]
-	http_req.request_target = lines[1]
-	http_req.protocol = lines[2]
+
+	lines := r.Data.Split("\r\n")
+	firstLine := lines[0]
+
+	parts := str(firstLine).Split(" ")
+	http_req.method = parts[0]
+	http_req.request_target = parts[1]
+	http_req.protocol = parts[2]
+
+	bodyStartIndex := -1
+	for i := 0; i < len(lines); i++ {
+		if lines[i] == "" {
+			bodyStartIndex = i + 1
+			break
+		}
+	}
+
+	if bodyStartIndex != -1 && bodyStartIndex < len(lines) {
+		for i := bodyStartIndex; i < len(lines); i++ {
+			if i > bodyStartIndex {
+				http_req.body += "\r\n"
+			}
+			http_req.body += lines[i]
+		}
+	} else {
+		http_req.body = ""
+	}
+
 	return http_req
 }
 
@@ -85,6 +111,7 @@ func handler(conn net.Listener) {
 		case "POST":
 			if http_req.request_target == "/" {
 				fmt.Println("200 OK")
+				fmt.Println(str(request.Buffer))
 				clientConn.Write([]byte(OK))
 			} else {
 				fmt.Println("404 Not Found")
