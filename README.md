@@ -1,15 +1,21 @@
 # HTTP Server in Go
 
-A simple HTTP/1.1 server implementation written in Go from scratch.
+An experimental HTTP/1.1 server implementation built from scratch in Go, using only the standard `net` package for learning purposes.
+
+## About
+
+This is a learning project focused on understanding HTTP protocol fundamentals and TCP socket programming in Go. The goal is to implement a basic HTTP server without relying on Go's `net/http` package or other high-level abstractions.
+
+**Note:** This project was initially based on the [CodeCrafters HTTP Server challenge](https://codecrafters.io/challenges/http-server), but has been extended and personalized for independent learning.
 
 ## Features
 
-- ✅ TCP connection handling
-- ✅ HTTP/1.1 request parsing
-- ✅ Custom string manipulation (no external dependencies)
-- ✅ GET and POST method support
-- ✅ Basic routing
-- ✅ Proper connection lifecycle management with defer
+- TCP connection handling
+- HTTP/1.1 request parsing
+- Custom string manipulation (no external dependencies)
+- GET and POST method support
+- Basic routing
+- Proper connection lifecycle management with defer
 
 ## Project Structure
 
@@ -18,6 +24,7 @@ A simple HTTP/1.1 server implementation written in Go from scratch.
 ├── app/
 │   └── main.go       # Main HTTP server implementation
 ├── go.mod            # Go module definition
+├── run.sh            # Build and run script
 └── README.md         # This file
 ```
 
@@ -30,6 +37,10 @@ A simple HTTP/1.1 server implementation written in Go from scratch.
 ### Running the Server
 
 ```bash
+# Using the run script
+./run.sh
+
+# Or directly with go run
 go run app/main.go
 ```
 
@@ -41,7 +52,7 @@ The server will start listening on `0.0.0.0:4221`
 # Test root endpoint
 curl http://localhost:4221/
 
-# Test echo endpoint
+# Test echo endpoint (if implemented)
 curl http://localhost:4221/echo/hello
 
 # Test with verbose output
@@ -83,16 +94,18 @@ The server uses a switch statement for clean method-based routing:
 - Other methods - Returns 405 Method Not Allowed
 - Unknown paths - Returns 404 Not Found
 
-## Learning Objectives
+## Limitations
 
-This project demonstrates:
+This is an educational project with intentional limitations:
 
-1. TCP socket programming in Go
-2. HTTP protocol fundamentals
-3. Custom type creation and method receivers
-4. Proper resource management with `defer`
-5. String manipulation without external libraries
-6. Error handling patterns in Go
+- Single-threaded connection handling (no concurrency)
+- Basic string parsing (no robust HTTP header parsing)
+- No HTTP body handling
+- No HTTPS/TLS support
+- No production-ready error handling
+- Limited HTTP method support
+
+**Not intended for production use.**
 
 ## License
 
